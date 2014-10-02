@@ -77,7 +77,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   	beakermaster_config.vm.provision "shell",
 		inline: "cp -af /vagrant/puppet_config/manifests/site.pp /etc/puppet/manifests/site.pp;
 		cp -raf /vagrant/puppet_config/modules/beaker /etc/puppet/modules/;
-		puppet module install puppet module install puppetlabs-vcsrepo;
+		puppet module install puppetlabs-vcsrepo;
 		chkconfig puppetmaster on;"
 
   end
