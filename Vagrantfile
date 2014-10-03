@@ -18,6 +18,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.box = BOX_NAME
     config.vm.box_url = BOX_URI
 	config.vm.box_download_insecure = true
+	config.proxy.http = ""
+	config.proxy.https = ""
+	config.proxy.no_proxy = HOSTS_NO_PROXY
   
   config.vm.define :beakeragent01 do |beakeragent01_config|
     beakeragent01_config.vm.network :private_network, ip: "10.1.172.11"    
@@ -58,14 +61,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
 	  end  
   end
-
  
   config.vm.define :beakermaster do |beakermaster_config|
     beakermaster_config.vm.network :private_network, ip: "10.1.172.10"
     beakermaster_config.vm.network "forwarded_port", guest: 8140, host: 8140
     beakermaster_config.vm.network "forwarded_port", guest: 443, host: 4431
     beakermaster_config.vm.hostname = "beakermaster.local"
-    beakermaster_config.vm.provider "virtualbox" do |v|
+    beakermaster_config.vm.provider "virtualbox" do |v, override|
       v.name = "beakermaster"
       v.gui = "true"
       v.customize ["modifyvm", :id, "--memory", 2048]
@@ -73,12 +75,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       v.customize ["modifyvm", :id, "--cpus", "2"]
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+	  override.proxy.enabled = false
 	  end  
   	beakermaster_config.vm.provision "shell",
 		inline: "cp -af /vagrant/puppet_config/manifests/site.pp /etc/puppet/manifests/site.pp;
 		cp -raf /vagrant/puppet_config/modules/beaker /etc/puppet/modules/;
-		puppet module install puppetlabs-vcsrepo;
-		chkconfig puppetmaster on;"
+		puppet module install puppetlabs-vcsrepo; chkconfig puppetmaster on;"
 
   end
 
@@ -88,14 +90,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         provisioner.add_host '10.1.172.12', ['beakeragent02.local', 'beakeragent02']
         provisioner.add_host '10.1.172.13', ['beakeragent03.local', 'beakeragent03']
   end
-  config.proxy.http = ""
-  config.proxy.https = ""
-  config.proxy.no_proxy = HOSTS_NO_PROXY
     
   config.vm.provision "shell",
 	inline: "cp -af /vagrant/puppet_config/puppet.conf /etc/puppet/"
-
-  config.vm.provision "shell",
-	inline: "rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-el-6.noarch.rpm"  
 	
 end
